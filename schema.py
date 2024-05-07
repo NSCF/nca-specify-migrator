@@ -22,6 +22,9 @@ table_names = [
     'determiner'
     ]
 
+discipline = 'Arachnology'
+collection = 'Arachnida'
+
 # MySQL connection details
 username = 'root'
 password = 'root'
@@ -42,52 +45,13 @@ except Exception as ex:
     print(str(ex))
     exit()
 
-# pull them all out so we can use them
-Agent = metadata.tables['agent']
-Collector = metadata.tables['collector']
-CollectingEvent = metadata.tables['collectingevent']
-CollectionObject = metadata.tables['collectionobject']
-Collection = metadata.tables['collection']
-
-Collector.agent = relationship(Agent)
-CollectingEvent.collectors = relationship(Collector)
-CollectionObject.collectingevent = relationship(CollectingEvent)
-CollectionObject.collection = relationship(Collection)
-
-with Session(engine) as session:
-    co = session.query(CollectionObject).first()
-    co.collection
-    i = 0
-
-class AgentTable:
-    def __init__(self, engine):
-        self.engine = engine
-        self.table = table
-
-    def find(self, search_criteria):
-        query = (
-            select(Agent)
-            .join(Collector.agent)
-            .join(CollectionObject.collector)
-            .join(Collection.collectionobject)
-        )
-        if search_criteria:
-            conditions = [self.table.c[key] == value for key, value in search_criteria.items()]
-            query = query.where(and_(*conditions))
-
-        records = []
-        with Session(engine) as session:
-            for record in session.execute(query).all():
-                records.append(record)
-        return records
-
 class DBTable:
     def __init__(self, engine, table):
         self.engine = engine
         self.table = table
 
     def find(self, search_criteria):
-        query = select(self.table)
+        query = self.table.select()
         if search_criteria:
             conditions = [self.table.c[key] == value for key, value in search_criteria.items()]
             query = query.where(and_(*conditions))
@@ -97,12 +61,43 @@ class DBTable:
             for record in session.execute(query).all():
                 records.append(record)
         return records
+
+class TaxonTable:
+    def __init__(self, engine):
+        self.engine = engine
+        self.table = metadata.tables['taxon']
+
+    def find(self, search_criteria):
+        query = self.table.select()
+        query = query.select_from(
+            self.table
+            .join(metadata.tables['taxontreedef'])
+            .join(metadata.tables['discipline'], 
+                _and() # this is where I gave up, it's just easier to use SQL, since this is basically just SQL!
+            )
+        )
+        if search_criteria:
+            conditions = [self.table.c[key] == value for key, value in search_criteria.items()]
+            query = query.where(and_(*conditions))
+
+        query = query.join(metadata.tables['taxontreedef']).join(metadata.tables['discipline'])
+        query = query.where(metadata.tables['discipline'].c.Name == discipline)
+
+        records = []
+        with Session(engine) as session:
+            for record in session.execute(query).all():
+                records.append(record)
+        return records
+
+
     
 db = {}
 #add the necessary database operations
 for tablename in metadata.tables:
-    table = metadata.tables[tablename]
-    db[tablename] = DBTable(engine, table)
+    if tablename == 'taxon':
+        db[tablename] = TaxonTable(engine)
+    else:
+        db[tablename] = DBTable(engine, metadata.tables[tablename])
    
     
 

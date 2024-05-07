@@ -1,12 +1,14 @@
-from schema import db
+from db import get_db
 
-search_dict = {"LastName": "Cameron"}
+db = get_db('root', 'root', 'localhost', 'specify_php', 'arachnida')
 
-camerons = db['agent'].find(search_dict)
+search_dict = {"FullName": "Opistophthalmus"}
 
-if len(camerons) > 0:
-    print('we have the following camerons:')
-    for agent in camerons:
-        print(agent.FirstName)
+results = db.taxon.find(search_dict)
+
+if len(results) > 0:
+    print('we have the following results:')
+    for result in results:
+        print(result)
 else:
-    print('there are no camerons...')
+    print('there are no results...')

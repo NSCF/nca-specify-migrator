@@ -1,5 +1,7 @@
 ### Specify Migrator
 
+#### UNDER CONSTRUCTION
+
 A script for importing specimen data into Specify, so that we don't have to split large files into chunks. 
 
 This is an alternative to using the Specify Workbench, if you're happy to skip all the verification stuff. It is intended for initial migrations of large databases. If migrating a small database of less than 10 000 records rather use the workbench. 
