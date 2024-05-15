@@ -1,5 +1,6 @@
 # script for updating synonyms from an extract from WSC
-# note to change the various field names used in the SCRIPT depending on the source...
+# this should only be run once, then use the API afterwards
+
 import sys
 from db import get_db
 from functions import walkdowntree, build_names_indexes

@@ -34,21 +34,20 @@ class Taxon:
         
         # expects that strings will be strings and other values will be the relevant type
         clauses = []
-        params = []
         for key in criteria.keys():
           if key.lower() == 'rank':
             field = 'ttdi.name'
           else:
-            field = 't.' + key.lower()
+            field = 't.' + key
           
           if isinstance(criteria[key], list):
             parts = []
             for param in criteria[key]:
-              parts.append(key + " = %s" )
+              parts.append(field + " = %s" )
               clauses.append(' OR '.join(parts))
               params.append(param)
           else:
-              clauses.append(key + " = %s")
+              clauses.append(field + " = %s")
               params.append(criteria[key])
         sql += ' AND ' + ' AND '.join(clauses)
 
@@ -88,10 +87,46 @@ class Taxon:
       cursor.close()
       raise ex
     
+class User:
+  def __init__(self, connection):
+
+    if not connection :
+      raise Exception('connection is required')
+    self.connection = connection
+
+  def find(self, criteria):
+    sql = '''select u.specifyuserID, a.agentID, u.name, a.firstName, a.initials, a.lastName from specifyuser u
+          join agent a on u.specifyuserid = a.specifyuserid
+        '''
+    
+    clauses = []
+    params = []
+    for [key, value] in criteria.items():
+      if value:
+        if key.lower() == 'username':
+          clauses.append('u.name = %s')
+        else:
+          clauses.append('a.' + key + ' = %s')
+        params.append(value)
+      
+    if len(clauses) > 0:
+      sql += ' WHERE ' + ' AND '.join(clauses)
+
+    cursor = self.connection.cursor(dictionary=True)
+    try:
+      cursor.execute(sql, params)
+      results = cursor.fetchall()
+      cursor.close()
+      return results
+    except Exception as ex:
+      cursor.close()
+      raise ex
+    
 class DB:
-  def __init__(self, conn, taxon):
+  def __init__(self, conn, taxon, user):
     self.connection = conn
     self.taxon = taxon
+    self.user = user
 
   def close(self):
     self.connection.close()
@@ -118,7 +153,8 @@ def get_db(user, password, host, database, collectionname):
   collection = collections[0]
   
   taxon = Taxon(connection, collection['disciplineid'])
+  user = User(connection)
 
-  db = DB(connection, taxon)
+  db = DB(connection, taxon, user)
   return db
   

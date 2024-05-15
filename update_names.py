@@ -1,12 +1,14 @@
 # a basic script to update species names in the database from an extract of the WSC (because sometimes we don't have authors or IDs)
-import path, sys
+from os import path
+import sys
 import csv
 from time import time
-import mysql.connector
 from db import get_db
 
 csv_dir = r'C:\devprojects\wsc-species-extractor'
 csv_file = r'wsc-species-and-synonyms-20240510.csv'
+
+
 
 db = get_db('root', 'root', 'localhost', 'specify_php', 'arachnida')
 
