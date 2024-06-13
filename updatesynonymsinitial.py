@@ -6,10 +6,10 @@ import sys
 import csv
 from datetime import datetime
 from time import time
-from db import get_db
+from db.db import get_db
 from functions import walkdowntree
 
-username = 'ian' # the name of the user indicate as 'modifiedby'
+username = 'ian' # the name of the user to indicate as 'modifiedby'
 csv_dir = r'D:\NSCF Data WG\Specify migration\ARC PHP\NCA\SPECIFY\DATA'
 names_file = r'WSC-V24.5-20240115-AcceptedNames-OpenRefine.csv'
 synonyms_file = r'WSC-V24.5-20240115-Synonyms-OpenRefine.csv'

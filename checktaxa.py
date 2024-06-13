@@ -3,7 +3,7 @@
 
 import csv, sys
 from os import path
-from db import get_db
+from db.db import get_db
 
 csvFile = r'NCA-data-export-20220901-OpenRefine-ie-edits20240313-coll12345Added-OpenRefine_20240507.csv'
 csvDir = r'D:\NSCF Data WG\Specify migration\ARC PHP\NCA\SPECIFY\DATA'

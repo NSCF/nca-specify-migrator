@@ -1,4 +1,4 @@
-from db import get_db
+from db.db import get_db
 
 db = get_db('root', 'root', 'localhost', 'specify_php', 'arachnida')
 

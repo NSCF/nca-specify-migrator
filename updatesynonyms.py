@@ -2,7 +2,7 @@
 # this should only be run once, then use the API afterwards
 
 import sys
-from db import get_db
+from db.db import get_db
 from functions import walkdowntree, build_names_indexes
 
 db = get_db('root', 'root', 'localhost', 'specify_php', 'arachnida')
