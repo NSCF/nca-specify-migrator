@@ -7,6 +7,7 @@ from datetime import datetime
 from time import time
 from db.db import get_db
 from functions import walkdowntree
+from .Counter import Counter
 
 username = 'ian' # the name of the user to indicate as 'modifiedby'
 csv_dir = r'D:\NSCF Data WG\Specify migration\ARC PHP\NCA\SPECIFY\DATA'
@@ -164,18 +165,7 @@ def update_names(db_table, db_taxon, names_index, synonyms_index, updates, manua
 
     counter.increment()
 
-  return
-
-class Counter:
-  def __init__(self, print_increment) -> None:
-    self.count = 0
-    self.print_increment = print_increment
-
-  def increment(self):
-    self.count += 1
-    if self.count % self.print_increment == 0:
-      print(self.count, 'records processed', end='\r')
-    
+  return  
 
 updates = []
 manual_check = []

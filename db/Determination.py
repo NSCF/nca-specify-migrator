@@ -1,9 +1,12 @@
-from utils.timestamp import get_timestamp
-from utils.field_has_value import field_has_value
+from .utils.timestamp import get_timestamp
+from .utils.field_has_value import field_has_value
 
 class Determination:
 
   def __init__(self, cursor, collectionid) -> None:
+
+    if not cursor:
+      raise Exception('cursor is required')
 
     if not collectionid:
       raise Exception('collectionid is required')
@@ -30,7 +33,7 @@ class Determination:
     fields = []
     values = []
 
-    for key, val in self.data.items():
+    for key, val in detdata.items():
       if isinstance(val, str) and val.strip().lower() == 'null':
         val = None
       fields.append(key)

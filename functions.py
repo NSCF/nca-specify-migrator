@@ -2,11 +2,18 @@ import sys
 from os import path
 import csv
 
+# function must take the dbtable and the node as first two arguments, then any additional arguments it needs
 def walkdowntree(dbtable, idfield, start_node, function, *args):
-  function(dbtable, start_node, *args)
+  try:
+    function(dbtable, start_node, *args)
+  except Exception as ex:
+    raise ex
   children = dbtable.find({"parentid" : start_node[idfield]})
   for child in children:
-    walkdowntree(dbtable, idfield, child, function, *args)
+    try:
+      walkdowntree(dbtable, idfield, child, function, *args)
+    except Exception as ex:
+      raise ex
 
 def build_names_indexes(csv_dir, csv_file, fullname_field, author_field, id_field):
   

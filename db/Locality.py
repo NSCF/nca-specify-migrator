@@ -1,4 +1,4 @@
-from utils.timestamp import get_timestamp
+from .utils.timestamp import get_timestamp
 
 class Locality:
 
@@ -10,7 +10,7 @@ class Locality:
     if not disciplineid:
       raise Exception('disciplineid is required')
     
-    self.connection = cursor
+    self.cursor = cursor
     self.disciplineid = disciplineid
 
   def insert(self, localitydata):

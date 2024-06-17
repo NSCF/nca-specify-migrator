@@ -1,6 +1,6 @@
 # note that this assumes all agents are people and not institutions
 
-from utils.timestamp import get_timestamp
+from .utils.timestamp import get_timestamp
 
 class Agent:
 
@@ -13,9 +13,8 @@ class Agent:
       raise Exception('divisionid is required')
     
     
-    self.connection = cursor
+    self.cursor = cursor
     self.divisionid = divisionid
-    self.data = None
 
 
   def find(self, criteria):
@@ -24,7 +23,7 @@ class Agent:
       raise Exception('criteria dictionary is required')
     
     params = [self.divisionid]
-    sql = '''select agentid, firstname, lastname from agent
+    sql = '''select agentid, firstname, lastname, initials, title from agent
       where divisionid = %s
     '''
 
@@ -43,13 +42,10 @@ class Agent:
     
     sql += ' AND ' + ' AND '.join(clauses)
 
-    cursor = self.connection.cursor(dictionary=True)
     try:
-      cursor.execute(sql, params)
-      results = cursor.fetchall()
-      cursor.close()
+      self.cursor.execute(sql, params)
+      results = self.cursor.fetchall()
     except Exception as ex:
-      cursor.close()
       raise ex
   
     return results
@@ -58,14 +54,12 @@ class Agent:
 
     if not agentdata or not isinstance(agentdata, dict) or len(agentdata.keys()) == 0:
       raise Exception('agentdata dictionary is required')
-    
-    self.data = agentdata
 
     sql = 'INSERT INTO agent '
     fields = []
     values = []
 
-    for key, val in self.data.items():
+    for key, val in agentdata.items():
       if isinstance(val, str) and val.strip().lower() == 'null':
         val = None
       fields.append(key)

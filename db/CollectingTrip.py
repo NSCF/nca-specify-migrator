@@ -15,20 +15,20 @@ class CollectingEvent:
     self.disciplineid = disciplineid
 
 
-  def insert(self, eventdata):
+  def insert(self, tripdata):
 
-    if not eventdata or not isinstance(eventdata, dict) or len(eventdata.keys()) == 0:
+    if not tripdata or not isinstance(tripdata, dict) or len(tripdata.keys()) == 0:
       raise Exception('eventdata dictionary is required')
     
     # required fields
-    if not field_has_value('localityID', eventdata):
-      raise Exception('localityID is required')
+    if not field_has_value('collectingtripname', tripdata):
+      raise Exception('trip name is required')
 
-    sql = 'INSERT INTO collectingevent '
+    sql = 'INSERT INTO collectingtrip '
     fields = []
     values = []
 
-    for key, val in eventdata.items():
+    for key, val in tripdata.items():
       if isinstance(val, str) and val.strip().lower() == 'null':
         val = None
       fields.append(key)
@@ -51,10 +51,10 @@ class CollectingEvent:
     
     try:
       self.cursor.execute(sql, values)
-      collectingevent_id = self.cursor.lastrowid
+      collectingtrip_id = self.cursor.lastrowid
     except Exception as ex:
       raise ex
     
-    return collectingevent_id
+    return collectingtrip_id
 
     

@@ -1,19 +1,41 @@
 # The DB interface
 # I decided to go with raw SQL over SQLAlchemy as that just seems to be a thin wrapper over SQL anyway, without much apparent benefit
+# There are also several idiosyncracies in the Specify database structure, such as requiring additional fields, which I wanted to 
+# hard code and check for in queries to prevent errors
 
 import mysql.connector
-from Taxon import Taxon
-from User import User
-from Agent import Agent
-from Locality import Locality
+from .Agent import Agent
+from .CollectingEvent import CollectingEvent
+from .CollectingEventAttribute import CollectingEventAttribute
+from .CollectionObject import CollectionObject
+from .CollectionObjectAttribute import CollectionObjectAttribute
+from .Determination import Determination
+from .Locality import Locality
+from .Preparation import Preparation
+from .PrepType import PrepType
+from .Taxon import Taxon
+from .User import User
+from .Geography import Geography
 
-    
 class DB:
-  def __init__(self, conn, cursor, taxon, user):
+  def __init__(self, conn, cursor, agent, collectingevent, 
+               collectingeventattribute, collectionobject, collectionobjectattribute, determination,
+                locality, preparation, preptype, taxon, user, geography):
+    
     self.connection = conn
     self.cursor = cursor
-    self.taxon = taxon
-    self.user = user
+    self.agents = agent
+    self.collectingevents = collectingevent
+    self.collectingeventattributes = collectingeventattribute
+    self.collectionobjects = collectionobject
+    self.collectionobjectattributes = collectionobjectattribute
+    self.determinations = determination
+    self.localities = locality
+    self.preparations = preparation
+    self.preptypes = preptype
+    self.taxa = taxon
+    self.users = user
+    self.geography = geography
 
   def rollback(self):
     self.connection.rollback()
@@ -25,10 +47,6 @@ class DB:
     self.cursor.close()
     self.connection.close()
 
-  # just in case
-  def __del__(self):
-    self.rollback()
-    self.close()
 
 def get_db(user, password, host, database, collectionname):
   try:
@@ -36,9 +54,10 @@ def get_db(user, password, host, database, collectionname):
   except:
     raise Exception('could not connect to database')
 
+  cursor = connection.cursor(dictionary=True)
+
   #get the collection
   sql = 'select collectionid, disciplineid from collection where collectionname = %s'
-  cursor = connection.cursor(dictionary=True)
   try:
     cursor.execute(sql, (collectionname,))
     collections = cursor.fetchall()
@@ -50,11 +69,33 @@ def get_db(user, password, host, database, collectionname):
   
   collectionid = collections[0]['collectionid']
   disciplineid = collections[0]['disciplineid']
+
+  # get the division
+  sql = 'select divisionid from discipline where disciplineid = %s'
+  try:
+    cursor.execute(sql, (disciplineid,))
+    divisions = cursor.fetchall()
+  except Exception as ex:
+    raise ex
   
+  divisionid = divisions[0]['divisionid']
+
+  agent = Agent(cursor, divisionid)
+  collectingEvent = CollectingEvent(cursor, disciplineid)
+  collectingEventAttribute = CollectingEventAttribute(cursor, disciplineid)
+  collectionObject = CollectionObject(cursor, collectionid)
+  collectionObjectAttribute = CollectionObjectAttribute(cursor, collectionid)
+  determination = Determination(cursor, collectionid)
+  locality = Locality(cursor, disciplineid)
+  preparation = Preparation(cursor, collectionid)
+  prepType = PrepType(cursor, collectionid)
   taxon = Taxon(cursor, disciplineid)
   user = User(cursor)
+  geography = Geography(cursor, disciplineid)
 
-  db = DB(connection, cursor, taxon, user)
+  db = DB(connection, cursor, agent, collectingEvent, 
+               collectingEventAttribute, collectionObject, collectionObjectAttribute, determination,
+                locality, preparation, prepType, taxon, user, geography)
   
   return db
   

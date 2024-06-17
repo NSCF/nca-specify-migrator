@@ -1,4 +1,4 @@
-from utils.timestamp import get_timestamp
+from .utils.timestamp import get_timestamp
 
 class CollectingEventAttribute:
 

@@ -1,5 +1,5 @@
-from utils.timestamp import get_timestamp
-from utils.field_has_value import field_has_value
+from .utils.timestamp import get_timestamp
+from .utils.field_has_value import field_has_value
 
 class Preparation:
 
@@ -11,10 +11,8 @@ class Preparation:
     if not collectionid:
       raise Exception('collectionid is required')
     
-    self.connection = cursor
+    self.cursor = cursor
     self.collectionid = collectionid
-
-    self.data = None
 
   def insert(self, prepdata):
 
@@ -34,7 +32,7 @@ class Preparation:
     fields = []
     values = []
 
-    for key, val in self.data.items():
+    for key, val in prepdata.items():
       if isinstance(val, str) and val.strip().lower() == 'null':
         val = None
       fields.append(key)

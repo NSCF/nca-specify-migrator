@@ -29,13 +29,10 @@ class PrepType:
     
     sql += ' AND ' + ' AND '.join(clauses)
 
-    cursor = self.connection.cursor(dictionary=True)
     try:
-      cursor.execute(sql, params)
-      results = cursor.fetchall()
-      cursor.close()
+      self.cursor.execute(sql, params)
+      results = self.cursor.fetchall()
     except Exception as ex:
-      cursor.close()
       raise ex
   
     return results

@@ -1,5 +1,5 @@
 # Taxon must only work with records for this discipline
-class Taxon:
+class Geography:
 
   def __init__(self, cursor, disciplineid):
 
@@ -19,11 +19,9 @@ class Taxon:
       raise Exception('criteria dictionary is required')
     
     params = [self.disciplineid]
-    sql = '''select t.taxonID, t.name, t.author, t.fullname, ttdi.name as rank, t.guid, 
-      at.fullname as acceptedname, at.author as acceptednameauthor, at.guid as acceptednameguid from taxon t 
-      join taxontreedefitem ttdi on t.taxontreedefitemid = ttdi.taxontreedefitemid
-      join discipline d on d.taxontreedefid = ttdi.taxontreedefid
-      left outer join taxon at on at.taxonid = t.acceptedID
+    sql = '''select g.geographyID, g.name, gtdi.name as rank from geography g
+      join geographytreedefitem gtdi on g.geographytreedefitemid = gtdi.geographytreedefitemid
+      join discipline d on d.geographytreedefid = gtdi.geographytreedefid
       where d.disciplineid = %s
     '''
 
@@ -37,9 +35,9 @@ class Taxon:
         clauses = []
         for key in criteria.keys():
           if key.lower() == 'rank':
-            field = 'ttdi.name'
+            field = 'gtdi.name'
           else:
-            field = 't.' + key
+            field = 'g.' + key
           
           if isinstance(criteria[key], list):
             parts = []
@@ -59,13 +57,14 @@ class Taxon:
       return results
     except Exception as ex:
       raise ex
-    
-  def update(self, taxonid, params):
+  
+
+  def update(self, geographyid, params):
 
     if not params or not isinstance(params, dict) or len(params.keys()) == 0:
       raise Exception('params dict is required for update')
     
-    sql = 'update taxon set '
+    sql = 'update geography set '
     clauses = []
     values = []
     for key, val in params.items():
@@ -76,8 +75,8 @@ class Taxon:
       values.append(val)
       
     sql += ', '.join(clauses)
-    sql += ' where taxonid = %s'
-    values.append(taxonid)
+    sql += ' where geographyid = %s'
+    values.append(geographyid)
 
     try:
       self.cursor.execute(sql, values)
