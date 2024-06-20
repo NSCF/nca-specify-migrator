@@ -19,7 +19,7 @@ class Taxon:
       raise Exception('criteria dictionary is required')
     
     params = [self.disciplineid]
-    sql = '''select t.taxonID, t.name, t.author, t.fullname, ttdi.name as rank, t.guid, 
+    sql = '''select t.taxonid, t.acceptedid, t.name, t.author, t.fullname, ttdi.name as rank, t.guid, 
       at.fullname as acceptedname, at.author as acceptednameauthor, at.guid as acceptednameguid from taxon t 
       join taxontreedefitem ttdi on t.taxontreedefitemid = ttdi.taxontreedefitemid
       join discipline d on d.taxontreedefid = ttdi.taxontreedefid

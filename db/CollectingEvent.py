@@ -19,10 +19,6 @@ class CollectingEvent:
 
     if not eventdata or not isinstance(eventdata, dict) or len(eventdata.keys()) == 0:
       raise Exception('eventdata dictionary is required')
-    
-    # required fields
-    if not field_has_value('localityID', eventdata):
-      raise Exception('localityID is required')
 
     sql = 'INSERT INTO collectingevent '
     fields = []

@@ -18,10 +18,6 @@ class CollectionObject:
 
     if not objectdata or not isinstance(objectdata, dict) or len(objectdata.keys()) == 0:
       raise Exception('objectdata dictionary is required')
-
-    # required fields
-    if not field_has_value('collectingEventID', objectdata):
-      raise Exception('collectingEventID value is required')
     
     sql = 'INSERT INTO collectionobject '
     fields = []

@@ -1,7 +1,7 @@
 from .utils.timestamp import get_timestamp
 from .utils.field_has_value import field_has_value
 
-class CollectingEvent:
+class CollectingTrip:
   
   def __init__(self, cursor, disciplineid) -> None:
 
@@ -18,7 +18,7 @@ class CollectingEvent:
   def insert(self, tripdata):
 
     if not tripdata or not isinstance(tripdata, dict) or len(tripdata.keys()) == 0:
-      raise Exception('eventdata dictionary is required')
+      raise Exception('tripdata dictionary is required')
     
     # required fields
     if not field_has_value('collectingtripname', tripdata):

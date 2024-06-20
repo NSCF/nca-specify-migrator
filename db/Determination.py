@@ -20,13 +20,13 @@ class Determination:
       raise Exception('detdata dictionary is required')
     
     # required fields
-    if not field_has_value('collectionObjectID', detdata):
+    if not field_has_value('collectionobjectid', detdata):
       raise Exception('collectionObjectID is required')
     
-    if not field_has_value('taxonID', detdata):
+    if not field_has_value('taxonid', detdata):
       raise Exception('taxonID is required')
     
-    if not field_has_value('preferredTaxonID', detdata):
+    if not field_has_value('preferredtaxonid', detdata):
       raise Exception('preferredTaxonID is required')
     
     sql = 'INSERT INTO determination '

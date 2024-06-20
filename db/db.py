@@ -7,6 +7,7 @@ import mysql.connector
 from .Agent import Agent
 from .CollectingEvent import CollectingEvent
 from .CollectingEventAttribute import CollectingEventAttribute
+from .CollectingTrip import CollectingTrip
 from .CollectionObject import CollectionObject
 from .CollectionObjectAttribute import CollectionObjectAttribute
 from .Determination import Determination
@@ -19,7 +20,7 @@ from .Geography import Geography
 
 class DB:
   def __init__(self, conn, cursor, agent, collectingevent, 
-               collectingeventattribute, collectionobject, collectionobjectattribute, determination,
+               collectingeventattribute, collectingtrip, collectionobject, collectionobjectattribute, determination,
                 locality, preparation, preptype, taxon, user, geography):
     
     self.connection = conn
@@ -27,6 +28,7 @@ class DB:
     self.agents = agent
     self.collectingevents = collectingevent
     self.collectingeventattributes = collectingeventattribute
+    self.collectingtrips = collectingtrip
     self.collectionobjects = collectionobject
     self.collectionobjectattributes = collectionobjectattribute
     self.determinations = determination
@@ -83,6 +85,7 @@ def get_db(user, password, host, database, collectionname):
   agent = Agent(cursor, divisionid)
   collectingEvent = CollectingEvent(cursor, disciplineid)
   collectingEventAttribute = CollectingEventAttribute(cursor, disciplineid)
+  collectingTrip = CollectingTrip(cursor, disciplineid)
   collectionObject = CollectionObject(cursor, collectionid)
   collectionObjectAttribute = CollectionObjectAttribute(cursor, collectionid)
   determination = Determination(cursor, collectionid)
@@ -94,7 +97,7 @@ def get_db(user, password, host, database, collectionname):
   geography = Geography(cursor, disciplineid)
 
   db = DB(connection, cursor, agent, collectingEvent, 
-               collectingEventAttribute, collectionObject, collectionObjectAttribute, determination,
+               collectingEventAttribute, collectingTrip, collectionObject, collectionObjectAttribute, determination,
                 locality, preparation, prepType, taxon, user, geography)
   
   return db
