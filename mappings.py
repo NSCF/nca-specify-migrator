@@ -1,6 +1,6 @@
 collectonObjectMapping = {
   "Catalognumber": "catalognumber", 
-  "Collnumber": "fieldNumber",
+  "CollNumber": "fieldNumber",
   "DNA Code": "text5",
   "BOLD": "text6",
   "Notes": "remarks"
@@ -35,7 +35,7 @@ localityMapping = {
 
 collectingEventMapping = {
   "EventCode": "StationFieldNumber",
-  "CollectionDate": "StartDate",
+  "CollDate": "StartDate",
   "Method": "Method",
   "EventRemarks": "remarks"
 }
@@ -43,8 +43,8 @@ collectingEventMapping = {
 collectingEventAttributesMapping = {
   "Biome": "text1",
   "Association": "text2",
-  "Macrohabitat": "text3",
-  "Microhabitat": "text4"
+  "MacroHabitat": "text3",
+  "MicroHabitat": "text4"
 }
 
 collectingTrip = {

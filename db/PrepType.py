@@ -23,7 +23,7 @@ class PrepType:
 
 
     clauses = []
-    for key, val in criteria():
+    for key, val in criteria.items():
       clauses.append(key + " = %s")
       params.append(val)
     

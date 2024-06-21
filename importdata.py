@@ -1,51 +1,26 @@
 ### The import script
 ### Make sure to run checktaxa first so that this doesn't stop part way when missing taxa are found
+### REMEMBER TO MAKE A BACKUP OF YOUR DATABASE BEFORE YOU DO THIS!
 import csv
 from os import path
 from db.db import get_db
 from db.utils.field_has_value import field_has_value
 from db.utils.dict_is_empty import dict_is_empty
 from Counter import Counter
+from functions import find_or_add_record, get_date_precision
 from mappings import collectonObjectMapping, collectionObjectAttributesMapping, \
    determinationMapping, localityMapping, collectingEventMapping, \
   collectingEventAttributesMapping
 
 
-csvFile = r''
-csvDir = r''
+csvFile = r'NCA-data-export-20220901-OpenRefine-ie-edits20240313-coll12345Added-OpenRefine_20240621.csv'
+csvDir = r'D:\NSCF Data WG\Specify migration\ARC PHP\NCA\SPECIFY\DATA'
 maxCollectors = 5 # the maximum number of collectors for any record in the dataset
 prepTypeID = 21 # wet specimen/s
 
 db = get_db('root', 'root', 'localhost', 'specify_php', 'arachnida')
 
 ### SCRIPT ###
-
-# TODO add the date precision fields for all objects with date fields...
-
-def find_or_add_record(dbtable, record, records_dict, idfield=None):
-  record_tuple = tuple(record.values())
-  record_id = None
-  if record_tuple in records_dict:
-    record_id = records_dict[record_tuple]
-  else:
-    if dbtable.find:
-      try:
-        dbrecords = dbtable.find(record)
-      except Exception as ex:
-        raise ex
-
-      if len(dbrecords) > 0:
-        record_id = dbrecords[0][idfield]
-        records_dict[record_tuple] = record_id
-    
-    if not record_id:
-      try:
-        record_id = dbtable.insert(record)
-        records_dict[record_tuple] = record_id
-      except Exception as ex:
-        raise ex
-
-    return record_id
 
 # we don't need to remember collectionobjects or co-attributes because every row is a collection object, same for dets
 agents = {}
@@ -57,8 +32,10 @@ taxa = {}
 acceptedTaxa = {}
 prepTypes = {} # not presently used as everything is one prep type (see prepTypeID)
 
-error = False
-with open(path.join(csvDir, csvFile), 'r', encoding="uft8", errors='ignore') as f:
+counter = Counter(100)
+exception = None
+exception_table = None
+with open(path.join(csvDir, csvFile), 'r', encoding="utf8", errors='ignore') as f:
   reader = csv.DictReader(f)
   for record in reader:
     
@@ -95,20 +72,24 @@ with open(path.join(csvDir, csvFile), 'r', encoding="uft8", errors='ignore') as 
 
     # get / add the collectors
     collectors = []
-    collectorCount = 0
-    while collectorCount < maxCollectors:
+    collectorCount = 1 # because we start with collector 1
+    while collectorCount <= maxCollectors:
 
       collector = {
-        "title": record['coll' + collectorCount + "title"],
-        "firstname":  record['coll' + collectorCount + "firstName"],
-        "lastname": record['coll' + collectorCount + "lastName"],
-        "initials": record['coll' + collectorCount + "initials"]
+        "title": record['coll' + str(collectorCount) + "title"],
+        "firstname":  record['coll' + str(collectorCount) + "firstName"],
+        "lastname": record['coll' + str(collectorCount) + "lastName"],
+        "initials": record['coll' + str(collectorCount) + "initials"]
       }
 
       if dict_is_empty(collector):
         break
 
+      collector['agenttype'] = 1 # all collectors are people, even if they're not...
+
       collectors.append(collector)
+      
+      collectorCount += 1
 
     # get / add the determiner
     determiner = {
@@ -138,11 +119,8 @@ with open(path.join(csvDir, csvFile), 'r', encoding="uft8", errors='ignore') as 
       try:
         collector_id = find_or_add_record(db.agents, collector, agents, 'agentid')
       except Exception as ex:
-        error = True
-        print('error with collector for record', collectionObject['catalognumber'])
-        print(collector)
-        print(str(ex))
-        print('fix in dataset and try again')
+        exception = ex
+        exception_table = 'collector'
         break
 
       collectorIDs.append(collector_id)
@@ -150,14 +128,12 @@ with open(path.join(csvDir, csvFile), 'r', encoding="uft8", errors='ignore') as 
     # similar for determiner
     determiner_id = None
     if not dict_is_empty(determiner):
+      determiner['agenttype'] = 1
       try: 
         determiner_id = find_or_add_record(db.agents, determiner, agents, 'agentid')
       except Exception as ex:
-        error = True
-        print('error with determiner for record', collectionObject['catalognumber'])
-        print(determiner)
-        print(str(ex))
-        print('fix in dataset and try again')
+        exception = ex
+        exception_table = 'determiner'
         break
 
     geography_id = None
@@ -167,66 +143,78 @@ with open(path.join(csvDir, csvFile), 'r', encoding="uft8", errors='ignore') as 
 
     if not dict_is_empty(geography):
       try:
-        geography_id = find_or_add_record(db.geography, geography, geographies)
+        geography_id = find_or_add_record(db.geography, geography, geographies, 'geographyid')
       except:
-        error = True
-        print('error with locality for record', collectionObject['catalognumber'])
-        print(str(ex))
-        print('fix in dataset and try again')
+        exception = ex
+        exception_table = 'geography'
         break
 
     locality['geographyid'] = geography_id
     if not dict_is_empty(locality):
+
+      # TODO add decimal coordinates and srclatlongunit (0 == DD or null, 1 = everything else)
       try:
         locality_id = find_or_add_record(db.localities, locality, localities)
       except Exception as ex:
-        error = True
-        print('error with locality for record', collectionObject['catalognumber'])
-        print(str(ex))
-        print('fix in dataset and try again')
+        exception = ex
+        exception_table = 'locality'
         break
+
+    collecting_event_attributes_id = None
+    try:
+      collecting_event_attributes_id = db.collectingeventattributes.insert(collectingEventAttributes)
+    except Exception as ex:
+      exception = ex
+      exception_table = 'collectingeventattributes'
+      break
 
     if not dict_is_empty(project):
       try: 
         trip_id = find_or_add_record(db.collectingtrips, project, collectingTrips)
       except Exception as ex:
-        error = True
-        print('error with project for record', collectionObject['catalognumber'])
-        print(str(ex))
-        print('fix in dataset and try again')
+        exception = ex
+        exception_table = 'project'
         break
 
     collectingEvent['localityid'] = locality_id
     collectingEvent['collectingtripid'] = trip_id
+    collectingEvent['collectingeventattributeid'] = collecting_event_attributes_id
+
+    if collectingEvent['StartDate']:
+      collectingEvent['startdateprecision'] = get_date_precision(collectingEvent['StartDate'])
+
     if not dict_is_empty(collectingEvent):
       try:
         event_id = find_or_add_record(db.collectingevents, collectingEvent, collectingEvents)
       except Exception as ex:
-        error = True
-        print('error with collecting event for record', collectionObject['catalognumber'])
-        print(str(ex))
-        print('fix in dataset and try again')
+        exception = ex
+        exception_table = 'collecting event'
         break
+
+    collection_object_attributes_id = None
+    try:
+      collection_object_attributes_id = db.collectionobjectattributes.insert(collectionObjectAttributes)
+    except Exception as ex:
+      exception = ex
+      exception_table = 'collectingobjectattributes'
+      break
 
     collectionobject_id = None
     collectionObject['collectingeventid'] = event_id
+    collectionObject['collectionobjectattributeid'] = collection_object_attributes_id
     try:
       db.collectionobjects.insert(collectionObject)
     except Exception as ex:
-      error = True
-      print('error with collection object for record', collectionObject['catalognumber'])
-      print(str(ex))
-      print('fix in dataset and try again')
+      exception = ex
+      exception_table = 'collection object'
       break
 
     taxon_id = None
     try:
       taxon_id = find_or_add_record(db.taxa, taxon, taxa, 'taxonid')
     except Exception as ex:
-      error = True
-      print('error with taxon for record', collectionObject['catalognumber'])
-      print(str(ex))
-      print('fix in dataset and try again')
+      exception = ex
+      exception_table = 'taxon'
       break
 
     # we need the accepted taxon
@@ -238,9 +226,8 @@ with open(path.join(csvDir, csvFile), 'r', encoding="uft8", errors='ignore') as 
           taxon_record = db.taxa.find({'taxonid': taxon_record['acceptedid']})[0]
         acceptedTaxa[taxon_id] = taxon_record['taxonid']
       except Exception as ex:
-        error = True
-        print('error fetching accepted taxon record', collectionObject['catalognumber'])
-        print(str(ex))
+        exception = ex
+        exception_table = 'accepted taxon'
         break
 
     accepted_id = acceptedTaxa[taxon_id]
@@ -248,44 +235,42 @@ with open(path.join(csvDir, csvFile), 'r', encoding="uft8", errors='ignore') as 
     determination['taxonid'] = taxon_id
     determination['preferredtaxonid'] = accepted_id
     determination['determinerid'] = determiner_id
-    if not dict_is_empty():
+
+    # fix the date
+    if determination['determineddate']:
+      determination['determineddateprecision'] = get_date_precision(determination['determineddate'])
+
+    if not dict_is_empty(determination):
       try: 
         determination['collectionobjectid'] = collectionobject_id
         determination['IsCurrent'] = True
         db.determinations.insert(determination)
       except Exception as ex:
         error = True
-        print('error adding determination for record', collectionObject['catalognumber'])
-        print(str(ex))
+        exception_table = 'determination'
         break
 
-      
+    preparation = {
+      "collectionobjectid": collectionobject_id, 
+      "preptypeid": prepTypeID,
+      "countamt": 1 # vials only, so one vial per collectionboject
+    }
 
-      
+    try:
+      db.preparations.insert(preparation)
+    except Exception as ex:
+      exception = ex
+      exception_table = 'preparation'
+      break
 
-if error:
+    counter += 1
+
+if exception:
+  print('error with', exception_table, 'for record', collectionObject['catalognumber'])
+  print(str(exception))
   db.rollback()
   db.close()
 else:
   db.commit()
   db.close()
-
-print('all done!')
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  print('all done!')

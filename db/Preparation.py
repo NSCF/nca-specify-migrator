@@ -19,15 +19,6 @@ class Preparation:
     if not prepdata or not isinstance(prepdata, dict) or len(prepdata.keys()) == 0:
       raise Exception('prepdata dictionary is required')
     
-
-    #required fields
-
-    if not field_has_value('collectionObjectID', prepdata):
-      raise Exception('collectionObjectID is required')
-
-    if not field_has_value('prepTypeID', prepdata):
-      raise Exception('prepTypeID is required')
-    
     sql = 'INSERT INTO preparation '
     fields = []
     values = []
@@ -46,12 +37,12 @@ class Preparation:
     values.append(1)
 
     now = get_timestamp()
-    fields.append('timestampcreateed')
+    fields.append('timestampcreated')
     values.append(now)
     fields.append('timestampmodified')
     values.append(now)
 
-    sql += '(' + ', '.join(fields) + ') VALUES (' + ['%s'] * len(values) + ')'
+    sql += '(' + ', '.join(fields) + ') VALUES (' + ', '.join(['%s'] * len(values)) + ')'
 
     try:
       self.cursor.execute(sql, values)

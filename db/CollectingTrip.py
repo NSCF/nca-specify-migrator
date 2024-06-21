@@ -42,12 +42,12 @@ class CollectingTrip:
     values.append(1)
 
     now = get_timestamp()
-    fields.append('timestampcreateed')
+    fields.append('timestampcreated')
     values.append(now)
     fields.append('timestampmodified')
     values.append(now)
 
-    sql += '(' + ', '.join(fields) + ') VALUES (' + ['%s'] * len(values) + ')'
+    sql += '(' + ', '.join(fields) + ') VALUES (' + ', '.join(['%s'] * len(values)) + ')'
     
     try:
       self.cursor.execute(sql, values)

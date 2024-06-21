@@ -53,3 +53,43 @@ def build_names_indexes(csv_dir, csv_file, fullname_field, author_field, id_fiel
     "ids_index": ids_index,
     "duplicates": duplicates.keys()
   }
+
+def find_or_add_record(dbtable, record, records_dict, idfield=None):
+
+  record_tuple = tuple(record.values())
+  record_id = None
+  if record_tuple in records_dict:
+    record_id = records_dict[record_tuple]
+  else:
+    if hasattr(dbtable,'find') and callable(dbtable.find): # apparently this is how we check for methods...
+      try:
+        dbrecords = dbtable.find(record)
+      except Exception as ex:
+        raise ex
+
+      if len(dbrecords) > 0:
+        record_id = dbrecords[0][idfield]
+        records_dict[record_tuple] = record_id
+    
+    if not record_id and dbtable.insert:
+      try:
+        record_id = dbtable.insert(record)
+        records_dict[record_tuple] = record_id
+      except Exception as ex:
+        raise ex
+
+  return record_id
+
+# 1 is day, 2 is month, 3 is year  
+def get_date_precision(date):
+  if date and isinstance(date, str) and date.strip():
+    date_parts = date.split('-')
+    last_part = date_parts.pop()
+    while len(date_parts) and int(last_part) == 0:
+      last_part = date_parts.pop()
+    
+    if int(last_part) > 0:
+      date_parts.append(last_part)
+      return 4 - len(date_parts)
+    
+  return None
