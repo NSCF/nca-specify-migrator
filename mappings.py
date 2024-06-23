@@ -1,3 +1,6 @@
+# dictionary property fields are case sensitive and must exactly match the fields in the input dataset
+# property values (i.e. database field names) are not, but are used in the script so stick to all lowercase
+
 collectonObjectMapping = {
   "Catalognumber": "catalognumber", 
   "CollNumber": "fieldNumber",
@@ -28,15 +31,15 @@ determinationMapping = {
 localityMapping = {
   "FullLocalityName": "localityname",
   "Site": "text1",
-  "MigrationLatitude": "Lat1Text",
-  "MigrationLongitude": "Long1Text",
+  "MigrationLatitude": "verbatimlatitude",
+  "MigrationLongitude": "verbatimlongitude",
   "VerbatimElevation": "verbatimelevation"
 }
 
 collectingEventMapping = {
-  "EventCode": "StationFieldNumber",
-  "CollDate": "StartDate",
-  "Method": "Method",
+  "EventCode": "stationfieldnumber",
+  "CollDate": "startdate",
+  "Method": "method",
   "EventRemarks": "remarks"
 }
 

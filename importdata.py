@@ -1,7 +1,9 @@
 ### The import script
-### Make sure to run checktaxa first so that this doesn't stop part way when missing taxa are found
 ### REMEMBER TO MAKE A BACKUP OF YOUR DATABASE BEFORE YOU DO THIS!
-import csv
+### Make sure to run check_taxa_or_geography first so that this doesn't stop part way when missing taxa are found (for both taxa and geography)
+### Also run check_coordinates first to fix any errors there so we don't have problems here
+
+import csv, sys
 from os import path
 from db.db import get_db
 from db.utils.field_has_value import field_has_value
@@ -11,6 +13,11 @@ from functions import find_or_add_record, get_date_precision
 from mappings import collectonObjectMapping, collectionObjectAttributesMapping, \
    determinationMapping, localityMapping, collectingEventMapping, \
   collectingEventAttributesMapping
+
+# clone the coords parser repo from https://github.com/NSCF/geo-coords-parser-python
+# this may have to change depending where you put the repo
+sys.path.append(r"C:\devprojects\geo-coords-parser-python")
+from converter import convert
 
 
 csvFile = r'NCA-data-export-20220901-OpenRefine-ie-edits20240313-coll12345Added-OpenRefine_20240621.csv'
@@ -153,6 +160,18 @@ with open(path.join(csvDir, csvFile), 'r', encoding="utf8", errors='ignore') as 
     if not dict_is_empty(locality):
 
       # TODO add decimal coordinates and srclatlongunit (0 == DD or null, 1 = everything else)
+      if field_has_value(locality['verbatimlatitude']) and not field_has_value(locality['verbatimlongitude']):
+        exception = 'missing long coordinate'
+        exception_table = 'locality'
+        break
+
+      if field_has_value(locality['verbatimlongitude']) and not field_has_value(locality['verbatimlatitude']): 
+        exception = 'missing lat coordinate'
+        exception_table = 'locality'
+        break
+
+
+
       try:
         locality_id = find_or_add_record(db.localities, locality, localities)
       except Exception as ex:
@@ -180,8 +199,8 @@ with open(path.join(csvDir, csvFile), 'r', encoding="utf8", errors='ignore') as 
     collectingEvent['collectingtripid'] = trip_id
     collectingEvent['collectingeventattributeid'] = collecting_event_attributes_id
 
-    if collectingEvent['StartDate']:
-      collectingEvent['startdateprecision'] = get_date_precision(collectingEvent['StartDate'])
+    if collectingEvent['startdate']:
+      collectingEvent['startdateprecision'] = get_date_precision(collectingEvent['startdate'])
 
     if not dict_is_empty(collectingEvent):
       try:
