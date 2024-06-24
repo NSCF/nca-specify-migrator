@@ -69,8 +69,10 @@ with open(path.join(csvDir, csvFile), 'r', encoding="utf8", errors='ignore') as 
       except Exception as ex:
         localities[locality_tuple] = {
           'locality': locality['localityname'], # assuming this field will have something
-          'lat': locality['verbatimlatitude'],
-          'long': locality['verbatimlongitude'],
+          'original_lat': locality['verbatimlatitude'],
+          'original_long': locality['verbatimlongitude'],
+          'edited_lat': None,
+          'edited_long': None,
           'error': str(ex),
           'catnums': [collectionObject['catalognumber']]
         }

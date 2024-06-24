@@ -31,8 +31,6 @@ determinationMapping = {
 localityMapping = {
   "FullLocalityName": "localityname",
   "Site": "text1",
-  "MigrationLatitude": "verbatimlatitude",
-  "MigrationLongitude": "verbatimlongitude",
   "VerbatimElevation": "verbatimelevation"
 }
 
@@ -50,16 +48,23 @@ collectingEventAttributesMapping = {
   "MicroHabitat": "text4"
 }
 
-collectingTrip = {
+determinerMapping = {
+  "DetBy_FirstName": "firstname",
+  "DetBy_LastName": "lastname",
+  "DetBy_Initials": "initials"
+}
+
+collectingTripMapping = {
   "Project": "collectingtripname"
 }
 
-taxon = {
+taxonMapping = {
   "fullname": "fullname",
   "rank": "rank"
 }
 
-geography = {
+geographyMapping = {
   "geography": "name",
   "geographyRank": "rank"
 }
+

@@ -1,6 +1,6 @@
-import sys
+import sys, re, csv
 from os import path
-import csv
+from db.utils.field_has_value import field_has_value
 
 # function must take the dbtable and the node as first two arguments, then any additional arguments it needs
 def walkdowntree(dbtable, idfield, start_node, function, *args):
@@ -54,6 +54,13 @@ def build_names_indexes(csv_dir, csv_file, fullname_field, author_field, id_fiel
     "duplicates": duplicates.keys()
   }
 
+def get_record_data(record, mapping):
+  data = {}
+  for record_field, specify_field in mapping.items():
+      if field_has_value(record_field, record): 
+        data[specify_field] = record[record_field]
+  return data
+
 def find_or_add_record(dbtable, record, records_dict, idfield=None):
 
   record_tuple = tuple(record.values())
@@ -82,14 +89,25 @@ def find_or_add_record(dbtable, record, records_dict, idfield=None):
 
 # 1 is day, 2 is month, 3 is year  
 def get_date_precision(date):
+  precision = None
   if date and isinstance(date, str) and date.strip():
-    date_parts = date.split('-')
+    date_parts = re.split(r'[-\/]', date)
     last_part = date_parts.pop()
     while len(date_parts) and int(last_part) == 0:
       last_part = date_parts.pop()
     
     if int(last_part) > 0:
       date_parts.append(last_part)
-      return 4 - len(date_parts)
+      precision = 4 - len(date_parts)
     
-  return None
+  return precision
+
+def fix_date(date):
+  if date:
+    if '/' in date:
+      date = date.replace(r'/', '-')
+  
+    if date and '-00' in date:
+      date = date.replace('-00', '-01')
+
+  return date
