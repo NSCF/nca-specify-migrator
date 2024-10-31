@@ -17,6 +17,8 @@ from mappings import collectonObjectMapping, collectionObjectAttributesMapping, 
    determinationMapping, localityMapping, collectingEventMapping, \
   collectingEventAttributesMapping, determinerMapping, collectingTripMapping, geographyMapping, taxonMapping
 
+from db_credentials import credentials # A dictionary with fields for user, password, host, database, and collection name. Excluded for git for security reasons, so create your own. 
+
 # clone the coords parser repo from https://github.com/NSCF/geo-coords-parser-python
 # this may have to change depending where you put the repo
 sys.path.append(r"C:\devprojects\geo-coords-parser-python")
@@ -36,12 +38,13 @@ verbatim_coordinates_field = 'text2' # the field on the locality table used for 
 start_at = None
 break_at = 10000 # stop after this number to check in the db, also only for testing. Set to None otherwise
 
-# the db connection parameters
-db = get_db('root', 'root', 'localhost', 'specify_php', 'arachnida')
 
 ### SCRIPT ###
 
 start = time.perf_counter()
+
+# the db connection parameters
+db = get_db(*credentials.values())
 
 # we don't need to remember collectionobjects or co-attributes because every row is a collection object, same for dets
 agents = {}
@@ -73,7 +76,7 @@ with open(path.join(csvDir, csvFile), 'r', encoding="utf8", errors='ignore') as 
   for record in reader:
 
     counter.increment()
-    if counter.count >= break_at:
+    if break_at and counter.count >= break_at:
       break
 
     if start_at and counter.count < start_at:
@@ -98,12 +101,14 @@ with open(path.join(csvDir, csvFile), 'r', encoding="utf8", errors='ignore') as 
 
     collectingEventAttributes = get_record_data(record, collectingEventAttributesMapping)
 
-    # get / add the collectors
-    collectors = []
+    # get / add the collecting agents
+    collecting_agents = []
     collectorCount = 1 # because we start with collector 1
     while collectorCount <= maxCollectors:
 
-      collector = {
+      # collector fields are hardcoded here 
+      # TODO add a mapping and use that instead
+      collecting_agent = {
         "title": record['coll' + str(collectorCount) + "title"],
         "firstname":  record['coll' + str(collectorCount) + "firstName"],
         "lastname": record['coll' + str(collectorCount) + "lastName"],
@@ -111,19 +116,19 @@ with open(path.join(csvDir, csvFile), 'r', encoding="utf8", errors='ignore') as 
       }
 
       empties = []
-      for key in collector.keys():
-        if not collector[key]:
+      for key in collecting_agent.keys():
+        if not collecting_agent[key]:
           empties.append(key)
 
       for key in empties:
-        del collector[key]
+        del collecting_agent[key]
 
-      if dict_is_empty(collector):
+      if dict_is_empty(collecting_agent):
         break
 
-      collector['agenttype'] = 1 # all collectors are people, even if they're not...
+      collecting_agent['agenttype'] = 1 # all collectors are people, even if they're not...
 
-      collectors.append(collector)
+      collecting_agents.append(collecting_agent)
       
       collectorCount += 1
 
@@ -137,17 +142,16 @@ with open(path.join(csvDir, csvFile), 'r', encoding="utf8", errors='ignore') as 
     geography = get_record_data(record, geographyMapping)
 
     # let's start adding stuff
-    # note that we use tuples as dictionary keys
-    collectorIDs = []
-    for collector in collectors:
+    # note that we use tuples as dictionary keys for agents, etc
+    for collecting_agent in collecting_agents:
       try:
-        collector_id = find_or_add_record(db.agents, collector, agents, 'agentid')
+        collecting_agent_id = find_or_add_record(db.agents, collecting_agent, agents, 'agentid')
+        collecting_agent["agentid"] = collecting_agent_id
       except Exception as ex:
         exception = ex
-        exception_table = 'collector'
+        exception_table = 'agent'
         break
 
-      collectorIDs.append(collector_id)
 
     # similar for determiner
     determiner_id = None
@@ -157,7 +161,7 @@ with open(path.join(csvDir, csvFile), 'r', encoding="utf8", errors='ignore') as 
         determiner_id = find_or_add_record(db.agents, determiner, agents, 'agentid')
       except Exception as ex:
         exception = ex
-        exception_table = 'determiner'
+        exception_table = 'agent'
         break
 
     geography_id = None
@@ -176,7 +180,12 @@ with open(path.join(csvDir, csvFile), 'r', encoding="utf8", errors='ignore') as 
     locality['geographyid'] = geography_id
     if not dict_is_empty(locality):
 
-      # required field
+      # required fields
+
+      # this can happen if we have a country/province only
+      if 'localityname' not in locality:
+        locality['localityname'] = ' ' # we use an empty string just so there is a value
+      
       locality['srclatlongunit'] = 0
 
       # sorting out these coordinates
@@ -250,6 +259,27 @@ with open(path.join(csvDir, csvFile), 'r', encoding="utf8", errors='ignore') as 
       except Exception as ex:
         exception = ex
         exception_table = 'collecting event'
+        break
+
+    # we added the collecting agents, now we can add the collector records
+    for index, collecting_agent in enumerate(collecting_agents):
+      collector = {
+        "agentid": collecting_agent["agentid"],
+        "collectingeventid": event_id,
+        "ordernumber": index,
+        "isprimary": index == 0
+      }
+
+      collector_error = False
+      try:
+        db.collectors.insert(collector)
+      except Exception as ex:
+        exception = ex
+        exception_table = 'collector'
+        collector_error = True
+        break
+
+      if collector_error:
         break
 
     collection_object_attributes_id = None

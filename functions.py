@@ -78,7 +78,7 @@ def find_or_add_record(dbtable, record, records_dict, idfield=None):
         record_id = dbrecords[0][idfield]
         records_dict[record_tuple] = record_id
     
-    if not record_id and dbtable.insert:
+    if not record_id and hasattr(dbtable,'insert'):
       try:
         record_id = dbtable.insert(record)
         records_dict[record_tuple] = record_id

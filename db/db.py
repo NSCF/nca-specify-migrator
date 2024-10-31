@@ -5,6 +5,7 @@
 
 import mysql.connector
 from .Agent import Agent
+from .Collector import Collector
 from .CollectingEvent import CollectingEvent
 from .CollectingEventAttribute import CollectingEventAttribute
 from .CollectingTrip import CollectingTrip
@@ -19,13 +20,14 @@ from .User import User
 from .Geography import Geography
 
 class DB:
-  def __init__(self, conn, cursor, agent, collectingevent, 
+  def __init__(self, conn, cursor, agent, collector, collectingevent, 
                collectingeventattribute, collectingtrip, collectionobject, collectionobjectattribute, determination,
                 locality, preparation, preptype, taxon, user, geography):
     
     self.connection = conn
     self.cursor = cursor
     self.agents = agent
+    self.collectors = collector
     self.collectingevents = collectingevent
     self.collectingeventattributes = collectingeventattribute
     self.collectingtrips = collectingtrip
@@ -83,6 +85,7 @@ def get_db(user, password, host, database, collectionname):
   divisionid = divisions[0]['divisionid']
 
   agent = Agent(cursor, divisionid)
+  collector = Collector(cursor, divisionid)
   collectingEvent = CollectingEvent(cursor, disciplineid)
   collectingEventAttribute = CollectingEventAttribute(cursor, disciplineid)
   collectingTrip = CollectingTrip(cursor, disciplineid)
@@ -96,7 +99,7 @@ def get_db(user, password, host, database, collectionname):
   user = User(cursor)
   geography = Geography(cursor, disciplineid)
 
-  db = DB(connection, cursor, agent, collectingEvent, 
+  db = DB(connection, cursor, agent, collector, collectingEvent, 
                collectingEventAttribute, collectingTrip, collectionObject, collectionObjectAttribute, determination,
                 locality, preparation, prepType, taxon, user, geography)
   

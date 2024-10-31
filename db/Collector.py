@@ -30,8 +30,8 @@ class Collector:
     if not field_has_value('ordernumber', collectordata):
       raise Exception('ordernumber is required')
     
-    if not field_has_value('is_primary', collectordata):
-      raise Exception('is_primary value is required')
+    if not field_has_value('isprimary', collectordata):
+      raise Exception('isprimary value is required')
 
     sql = 'INSERT INTO collector '
     fields = []

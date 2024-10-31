@@ -14,6 +14,33 @@ class CollectionObject:
     self.cursor = cursor
     self.collectionid = collectionid
 
+  # this is only here because we had to find collection objects again to fix collectors
+  def find(self, criteria):
+
+    if not criteria or not isinstance(criteria, dict) or len(criteria.keys()) == 0:
+      raise Exception('criteria dictionary is required')
+    
+    params = [self.collectionid]
+    sql = '''select collectionobjectid, catalognumber, collectingeventid from collectionobject
+      where collectionid = %s
+    '''
+
+    clauses = []
+    for key, val in criteria.items():
+      
+      clauses.append(key + " = %s")
+      params.append(val)
+          
+    sql += ' AND ' + ' AND '.join(clauses)
+
+    try:
+      self.cursor.execute(sql, params)
+      results = self.cursor.fetchall()
+    except Exception as ex:
+      raise ex
+  
+    return results
+
   def insert(self, objectdata):
 
     if not objectdata or not isinstance(objectdata, dict) or len(objectdata.keys()) == 0:

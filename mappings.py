@@ -1,9 +1,10 @@
-# dictionary property fields are case sensitive and must exactly match the fields in the input dataset
-# property values (i.e. database field names) are not, but are used in the script so stick to all lowercase
+# Mapping dictionary property fields below are case sensitive and must exactly match the fields in the input dataset.
+# Property values (i.e. database field names) are not, but are used in the script so stick to all lowercase as a convention.
 
 collectonObjectMapping = {
   "Catalognumber": "catalognumber", 
   "CollNumber": "fieldNumber",
+  "MicroHabitat": "text7",
   "DNA Code": "text5",
   "BOLD": "text6",
   "Notes": "remarks"
@@ -29,7 +30,7 @@ determinationMapping = {
 }
 
 localityMapping = {
-  "FullLocalityName": "localityname",
+  "FullLocalityName": "localityname", # this db field is required, must always be here
   "Site": "text1",
   "VerbatimElevation": "verbatimelevation"
 }
@@ -44,8 +45,7 @@ collectingEventMapping = {
 collectingEventAttributesMapping = {
   "Biome": "text1",
   "Association": "text2",
-  "MacroHabitat": "text3",
-  "MicroHabitat": "text4"
+  "MacroHabitat": "text3"
 }
 
 determinerMapping = {
