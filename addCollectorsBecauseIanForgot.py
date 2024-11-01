@@ -18,7 +18,7 @@ maxCollectors = 5 # the maximum number of collectors for any record in the datas
 
 # for testing only - the index of the records to start processing at so we can fix errors. Set to None to process all records.
 start_at = None
-break_at = 10000 # stop after this number to check in the db, also only for testing. Set to None otherwise
+break_at = None # stop after this number to check in the db, also only for testing. Set to None otherwise
 
 ### SCRIPT ###
 
@@ -35,6 +35,7 @@ counter = Counter(100)
 exception = None
 exception_table = None
 
+collection_objects_not_found = []
 collecting_events_not_found = []
 
 print('processing records...')
@@ -70,9 +71,8 @@ with open(path.join(csvDir, csvFile), 'r', encoding="utf8", errors='ignore') as 
       break
 
     if len(collection_object_records) == 0:
-      exception_table = 'collectionobject'
-      exception = 'collection object not found'
-      break
+      collection_objects_not_found.append(collection_object_data)
+      continue
 
     if len(collection_object_records) > 1:
       exception_table = 'collectionobject'
@@ -153,6 +153,11 @@ minutes, seconds = divmod(remainder, 60)
 # for testing
 db.rollback()
 
+if len(collecting_events_not_found):
+  print("Collecting events do not exist for the following records:")
+  for collectionobject in collecting_events_not_found:
+    print(collectionobject["catalognumber"])
+
 # if testing set a value exception in the debug console here to invoke the rollback 
 if exception:
   print('error with', exception_table, f'row number {counter.count}')
@@ -161,19 +166,30 @@ if exception:
   db.rollback()
   db.close()
   print('please fix the error and try again')
-else:
+elif len(collection_objects_not_found):
+  print('There were', len(collection_objects_not_found), 'records in the dataset that are not in the database.')
+  response = input("Do you want to save the changes and add these records manually? (Y/n): ").strip().lower()
+  if response == 'y':
+    print(counter.count, 'records processed in', f"{int(hours):02}h{int(minutes):02}m{round(seconds):02}s")
+    print('committing changes to the database...')
+    db.commit()
+    db.close()
+    print('Records to add manually:')
+    for collection_object_data in collection_objects_not_found:
+      print(collection_object_data['catalognumber'])
+    print('all done!')
+  else:
+    print("Rolling back changes...")
+    db.rollback()
+    db.close()
+    print('all done!')
+elif not exception and not len(collection_objects_not_found):
   print(counter.count, 'records processed in', f"{int(hours):02}h{int(minutes):02}m{round(seconds):02}s")
   print('committing changes to the database...')
   db.commit()
   db.close()
-
-  if len(collecting_events_not_found):
-    print("Collecting events do not exist for the following records:")
-    for collectionobject in collecting_events_not_found:
-      print(collectionobject["catalognumber"])
-    
-
   print('all done!')
+
 
 
       
