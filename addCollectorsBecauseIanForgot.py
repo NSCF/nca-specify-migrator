@@ -18,7 +18,7 @@ maxCollectors = 5 # the maximum number of collectors for any record in the datas
 
 # for testing only - the index of the records to start processing at so we can fix errors. Set to None to process all records.
 start_at = None
-break_at = None # stop after this number to check in the db, also only for testing. Set to None otherwise
+break_at = 10000 # stop after this number to check in the db, also only for testing. Set to None otherwise
 
 ### SCRIPT ###
 
@@ -27,6 +27,7 @@ agents = {}
 start = time.perf_counter()
 
 # the db connection parameters
+print('getting database connection')
 db = get_db(*credentials.values())
 
 collecting_events_processed = set()
@@ -151,7 +152,7 @@ hours, remainder = divmod(elapsed, 3600)
 minutes, seconds = divmod(remainder, 60)
 
 # for testing
-db.rollback()
+# db.rollback()
 
 if len(collecting_events_not_found):
   print("Collecting events do not exist for the following records:")
